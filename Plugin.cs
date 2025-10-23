@@ -103,6 +103,7 @@ public class Plugin : BaseUnityPlugin
 public class notabigfanofthegovernment : MonoBehaviour
 {
     public static notabigfanofthegovernment Instance { get; private set; }
+    public bool forceEffect = false;
     Shader blackShader;
     Shader whiteShader;
     AssetBundle loadedBundle;
@@ -180,7 +181,7 @@ public class notabigfanofthegovernment : MonoBehaviour
 
     public void DisableEffect()
     {
-        if (activeCount <= 0) return;
+        if (activeCount <= 0 || forceEffect) return;
         activeCount = 0;
         ResetReplacementShaderFromHUD();
         SetUIVisible(true);
