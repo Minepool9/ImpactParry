@@ -14,7 +14,8 @@
         if (IsActive) return;
         IsActive = true;
         var mgr = notabigfanofthegovernment.Instance;
-        if (mgr != null) mgr.EnableEffect();
+        if (mgr != null) mgr.forceEffect = true;
+        mgr?.EnableEffect();
     }
 
     public void Disable()
@@ -22,6 +23,7 @@
         if (!IsActive) return;
         IsActive = false;
         var mgr = notabigfanofthegovernment.Instance;
-        if (mgr != null) mgr.DisableEffect();
+        if (mgr != null) mgr.forceEffect = false;
+        mgr?.DisableEffect();
     }
 }

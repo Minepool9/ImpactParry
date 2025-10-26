@@ -1,16 +1,18 @@
 ﻿using BepInEx;
+using Configgy;
 using GameConsole.pcon;
 using HarmonyLib;
+using ImpactParry;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ULTRAKILL.Cheats;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ULTRAKILL.Cheats;
-using Configgy;
-using System;
+using UnityEngine.UI;
 
 [BepInPlugin("doomahreal.ultrakill.impactparry", "ImpactParry", "1.0.0")]
 [BepInDependency("Hydraxous.ULTRAKILL.Configgy", BepInDependency.DependencyFlags.HardDependency)]
@@ -103,16 +105,16 @@ public class Plugin : BaseUnityPlugin
 public class notabigfanofthegovernment : MonoBehaviour
 {
     public static notabigfanofthegovernment Instance { get; private set; }
-    Shader blackShader;
-    Shader whiteShader;
-    AssetBundle loadedBundle;
-    Camera hudCamera;
-    Camera mainCamera;
-    int activeCount = 0;
-    CameraClearFlags hudPrevClear;
-    Color hudPrevBg;
-    CameraClearFlags mainPrevClear;
-    Color mainPrevBg;
+    public bool forceEffect = false;
+    public Shader blackShader;
+    public Shader whiteShader;
+    public AssetBundle loadedBundle;
+    public Camera hudCamera;
+    public Camera mainCamera;
+    public int activeCount = 0;
+    public CameraClearFlags mainPrevClear;
+    public Color mainPrevBg;
+    public int mainPrevMask;
 
     void Awake()
     {
@@ -174,13 +176,13 @@ public class notabigfanofthegovernment : MonoBehaviour
     {
         if (activeCount > 0) return;
         activeCount = 1;
-        ApplyReplacementShaderToHUD();
+        ApplyShaders();
         SetUIVisible(false);
     }
 
     public void DisableEffect()
     {
-        if (activeCount <= 0) return;
+        if (activeCount <= 0 || forceEffect) return;
         activeCount = 0;
         ResetReplacementShaderFromHUD();
         SetUIVisible(true);
@@ -200,29 +202,29 @@ public class notabigfanofthegovernment : MonoBehaviour
             hideUI.Enable(cheatsManager);
     }
 
-    void ApplyReplacementShaderToHUD()
+    void ApplyShaders()
     {
-        if (hudCamera != null)
-        {
-            hudPrevClear = hudCamera.clearFlags;
-            hudPrevBg = hudCamera.backgroundColor;
-            if (whiteShader != null) hudCamera.SetReplacementShader(whiteShader, "RenderType");
-            else if (blackShader != null) hudCamera.SetReplacementShader(blackShader, "RenderType");
-            hudCamera.clearFlags = CameraClearFlags.SolidColor;
-            hudCamera.backgroundColor = Color.black;
-            int mask = 0;
-            mask |= (1 << 0) | (1 << 9) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 25) | (1 << 27);
-            hudCamera.cullingMask = mask;
-        }
+        if (whiteShader != null) hudCamera?.SetReplacementShader(whiteShader, "RenderType");
+        else if (blackShader != null) hudCamera?.SetReplacementShader(blackShader, "RenderType");
         if (mainCamera != null)
         {
+            // set up previous
             mainPrevClear = mainCamera.clearFlags;
             mainPrevBg = mainCamera.backgroundColor;
-            if (blackShader != null) mainCamera.SetReplacementShader(blackShader, "RenderType");
+            mainPrevMask = mainCamera.cullingMask;
+
+            // set shaders if not null
+            if (whiteShader != null) mainCamera.SetReplacementShader(whiteShader, "RenderType");
+            else if (blackShader != null) mainCamera.SetReplacementShader(blackShader, "RenderType");
+
+            // fancy extra stuff to hide the enviroment and like make the background black
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = Color.black;
+            mainCamera.cullingMask ^= LayerMaskDefaults.Get(LMD.Environment);
         }
+
         UpdateShaderValues();
+        FixOutdoorEnemies.ApplyDefaultLayer();
     }
 
     void UpdateShaderValues()
@@ -271,23 +273,16 @@ public class notabigfanofthegovernment : MonoBehaviour
 
     void ResetReplacementShaderFromHUD()
     {
-        if (hudCamera != null)
-        {
-            hudCamera.ResetReplacementShader();
-            hudCamera.clearFlags = hudPrevClear;
-            hudCamera.backgroundColor = hudPrevBg;
-            hudCamera.cullingMask = (1 << 13);
-        }
+        FixOutdoorEnemies.ApplyPreviousLayer();
+        hudCamera?.ResetReplacementShader();
         if (mainCamera != null)
         {
             mainCamera.ResetReplacementShader();
             mainCamera.clearFlags = mainPrevClear;
             mainCamera.backgroundColor = mainPrevBg;
+            mainCamera.cullingMask = mainPrevMask;
         }
     }
 
-    void OnDestroy()
-    {
-        if (loadedBundle != null) loadedBundle.Unload(false);
-    }
+    void OnDestroy() => loadedBundle?.Unload(false);
 }
