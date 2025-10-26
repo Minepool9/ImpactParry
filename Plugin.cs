@@ -36,6 +36,9 @@ public class Plugin : BaseUnityPlugin
 
     static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (notabigfanofthegovernment.Instance != null) 
+            notabigfanofthegovernment.Instance.forceEffect = false;
+
         var sceneName = SceneHelper.CurrentScene;
         if (!string.IsNullOrEmpty(sceneName) && sceneName != "Bootstrap" && sceneName != "Main Menu" && sceneName != "Intro")
         {
