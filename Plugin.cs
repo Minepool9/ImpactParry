@@ -220,11 +220,10 @@ public class notabigfanofthegovernment : MonoBehaviour
             // fancy extra stuff to hide the enviroment and like make the background black
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = Color.black;
-            mainCamera.cullingMask ^= LayerMaskDefaults.Get(LMD.Environment);
+            mainCamera.cullingMask ^= LayerMaskDefaults.Get(LMD.Environment) | LayerMask.GetMask("Outdoors Non-solid");
         }
-
         UpdateShaderValues();
-        FixOutdoorEnemies.ApplyDefaultLayer();
+        FixOutdoorEnemies.ApplyDefaultLayers();
     }
 
     void UpdateShaderValues()
@@ -273,7 +272,7 @@ public class notabigfanofthegovernment : MonoBehaviour
 
     void ResetReplacementShaderFromHUD()
     {
-        FixOutdoorEnemies.ApplyPreviousLayer();
+        FixOutdoorEnemies.ApplyPreviousLayers();
         hudCamera?.ResetReplacementShader();
         if (mainCamera != null)
         {
