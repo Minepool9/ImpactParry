@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<!-- Set this to where ever your ULTRAKILL folder is. -->
-		<ULTRAKILLPath>C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</ULTRAKILLPath>
+		<ULTRAKILLPath>C:\hideo james\ULTRAKILL</ULTRAKILLPath>
 
 		<!-- You shouldn't need to touch these. If you do, ask me about it on discord @fredayddd321ewq -->
 		<ManagedPath>$(ULTRAKILLPath)\ULTRAKILL_Data\Managed</ManagedPath>
@@ -10,7 +10,7 @@
 		<PluginPath>$(BepInExPath)\plugins</PluginPath>
 		
 		<!-- Set this to where your Configgy dll is. -->
-		<ConfiggyPath>$(PluginPath)\CONFIGGY\Configgy.dll</ConfiggyPath>
+		<ConfiggyPath>$(PluginPath)\Configgy.dll</ConfiggyPath>
 		
 		<!-- This is the path where the DLL is copied too, if you have it in a folder or something then add the name of that folder onto here. -->
 		<CopyPath>$(PluginPath)\</CopyPath>
