@@ -30,6 +30,9 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
     </Reference>
+	<Reference Include="Assembly-CSharp">
+	  <HintPath>$(ManagedPath)\plog.dll</HintPath>
+	</Reference>
     <Reference Include="Configgy">
       <HintPath>$(ConfiggyPath)</HintPath>
     </Reference>

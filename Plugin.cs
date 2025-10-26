@@ -2,6 +2,7 @@
 using Configgy;
 using GameConsole.pcon;
 using HarmonyLib;
+using ImpactParry;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -105,15 +106,15 @@ public class notabigfanofthegovernment : MonoBehaviour
 {
     public static notabigfanofthegovernment Instance { get; private set; }
     public bool forceEffect = false;
-    Shader blackShader;
-    Shader whiteShader;
-    AssetBundle loadedBundle;
-    Camera hudCamera;
-    Camera mainCamera;
-    int activeCount = 0;
-    CameraClearFlags mainPrevClear;
-    Color mainPrevBg;
-    int mainPrevMask;
+    public Shader blackShader;
+    public Shader whiteShader;
+    public AssetBundle loadedBundle;
+    public Camera hudCamera;
+    public Camera mainCamera;
+    public int activeCount = 0;
+    public CameraClearFlags mainPrevClear;
+    public Color mainPrevBg;
+    public int mainPrevMask;
 
     void Awake()
     {
@@ -221,7 +222,9 @@ public class notabigfanofthegovernment : MonoBehaviour
             mainCamera.backgroundColor = Color.black;
             mainCamera.cullingMask ^= LayerMaskDefaults.Get(LMD.Environment);
         }
+
         UpdateShaderValues();
+        FixOutdoorEnemies.ApplyDefaultLayer();
     }
 
     void UpdateShaderValues()
@@ -270,6 +273,7 @@ public class notabigfanofthegovernment : MonoBehaviour
 
     void ResetReplacementShaderFromHUD()
     {
+        FixOutdoorEnemies.ApplyPreviousLayer();
         hudCamera?.ResetReplacementShader();
         if (mainCamera != null)
         {
