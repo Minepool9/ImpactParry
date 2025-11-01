@@ -1,5 +1,6 @@
-﻿using Configgy;
-using UnityEngine;
+﻿namespace ImpactParry;
+
+using Configgy;
 
 public class MyCoolBluuToon
 {

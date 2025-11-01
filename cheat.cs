@@ -1,4 +1,7 @@
-﻿public class sdiybtwiltedemoji : ICheat
+﻿namespace ImpactParry;
+
+/// <summary> Class containing the cheat used for testing ImpactParry. </summary>
+public class ImpactCheat : ICheat
 {
     public string LongName => "Impact Parry Test";
     public string Identifier => "doomahreal.impactparrycheat";
@@ -13,7 +16,7 @@
     {
         if (IsActive) return;
         IsActive = true;
-        var mgr = notabigfanofthegovernment.Instance;
+        var mgr = ImpactManager.Instance;
         if (mgr != null) mgr.forceEffect = true;
         mgr?.EnableEffect();
     }
@@ -22,7 +25,7 @@
     {
         if (!IsActive) return;
         IsActive = false;
-        var mgr = notabigfanofthegovernment.Instance;
+        var mgr = ImpactManager.Instance;
         if (mgr != null) mgr.forceEffect = false;
         mgr?.DisableEffect();
     }

@@ -1,18 +1,16 @@
-﻿using BepInEx;
+﻿namespace ImpactParry;
+
+using BepInEx;
 using Configgy;
-using GameConsole.pcon;
 using HarmonyLib;
 using ImpactParry;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using ULTRAKILL.Cheats;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 [BepInPlugin("doomahreal.ultrakill.impactparry", "ImpactParry", "1.0.0")]
 [BepInDependency("Hydraxous.ULTRAKILL.Configgy", BepInDependency.DependencyFlags.HardDependency)]
@@ -20,10 +18,11 @@ public class Plugin : BaseUnityPlugin
 {
     private ConfigBuilder config;
     private Harmony harmony;
-    [Configgable(path: "Shader", displayName: "Reset Values To Defaults")]
-    public static ConfigButton ResetMyCoolBluuToonButton = new ConfigButton(() => OHMYFUCKINGGODBRUH());
 
-    void Awake()
+    [Configgable(path: "Shader", displayName: "Reset Values To Defaults")]
+    public static ConfigButton ResetMySettingsButton = new(ResetSettings);
+
+    private void Awake()
     {
         Logger.LogInfo("hreoo worrl");
         config = new ConfigBuilder("doomahreal.ultrakill.impactparry", "ImpactParry");
@@ -34,80 +33,48 @@ public class Plugin : BaseUnityPlugin
         TryCreateManager();
     }
 
-    static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (notabigfanofthegovernment.Instance != null) 
-            notabigfanofthegovernment.Instance.forceEffect = false;
+        if (ImpactManager.Instance != null) 
+            ImpactManager.Instance.forceEffect = false;
 
         var sceneName = SceneHelper.CurrentScene;
         if (!string.IsNullOrEmpty(sceneName) && sceneName != "Bootstrap" && sceneName != "Main Menu" && sceneName != "Intro")
         {
-            if (notabigfanofthegovernment.Instance == null) TryCreateManager();
+            if (ImpactManager.Instance == null) TryCreateManager();
         }
     }
 
-    static void TryCreateManager()
+    private static void TryCreateManager()
     {
-        if (notabigfanofthegovernment.Instance != null) return;
-        GameObject g = new GameObject("skibidi dop dop yes yes");
-        g.AddComponent<notabigfanofthegovernment>();
+        if (ImpactManager.Instance != null) return;
+
+        GameObject mgrObj = new("ImpactManager");
+        mgrObj.AddComponent<ImpactManager>();
+        DontDestroyOnLoad(mgrObj);
     }
 
-    [HarmonyPatch(typeof(TimeController), "TimeIsStopped")]
-    static class whyareyoulookingatmelikethat
+    private static void ResetSettings()
     {
-        static void Prefix(float length)
-        {
-            if (!MyCoolBluuToon.enabled.Value) return;
-            var mgr = notabigfanofthegovernment.Instance;
-            if (mgr == null) return;
+        Type UItype = typeof(MyCoolBluuToon);
+        BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-            if (length >= 0.15f)
-                mgr.StartCoroutine(HandleImpactWindow(length));
-        }
-
-        static IEnumerator HandleImpactWindow(float length)
-        {
-            var mgr = notabigfanofthegovernment.Instance;
-            mgr.EnableEffect();
-            yield return new WaitForSecondsRealtime(length);
-            mgr.DisableEffect();
-        }
-    }
-
-    [HarmonyPatch(typeof(CheatsManager), "Start")]
-    static class sothatgoesthatwayandigothatwayohgodohmygodoh
-    {
-        static void Prefix(CheatsManager __instance)
-        {
-            __instance.RegisterExternalCheat(new sdiybtwiltedemoji());
-        }
-    }
-
-    private static void OHMYFUCKINGGODBRUH()
-    {
-        var t = typeof(MyCoolBluuToon);
-        var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
-        var elements = t.GetFields(flags).Select(f => f.GetValue(null))
-            .Concat(t.GetProperties(flags).Select(p => { try { return p.GetValue(null); } catch { return null; } }))
-            .Where(o => o is Configgy.ConfigValueElement)
-            .Cast<Configgy.ConfigValueElement>();
+        IEnumerable<ConfigValueElement> elements = UItype.GetFields(flags).Select(f => f.GetValue(null))
+            .Concat(UItype.GetProperties(flags).Select(p => { try { return p.GetValue(null); } catch { return null; } }))
+            .Where(o => o is ConfigValueElement)
+            .Cast<ConfigValueElement>();
 
         foreach (var elem in elements)
         {
-            var resetMethod = HarmonyLib.AccessTools.Method(elem.GetType(), "ResetValue", new Type[0]);
-            if (resetMethod != null)
-            {
-                resetMethod.Invoke(elem, null);
-            }
+            MethodInfo resetMethod = AccessTools.Method(elem.GetType(), "ResetValue", []);
+            resetMethod?.Invoke(elem, null);
         }
     }
 }
 
-public class notabigfanofthegovernment : MonoBehaviour
+public class ImpactManager : MonoBehaviour
 {
-    public static notabigfanofthegovernment Instance { get; private set; }
+    public static ImpactManager Instance { get; private set; }
     public bool forceEffect = false;
     public Shader blackShader;
     public Shader whiteShader;
@@ -119,7 +86,7 @@ public class notabigfanofthegovernment : MonoBehaviour
     public Color mainPrevBg;
     public int mainPrevMask;
 
-    void Awake()
+    private void Awake()
     {
         Instance = this;
         LoadEmbeddedBundleAndShaders();
@@ -127,7 +94,7 @@ public class notabigfanofthegovernment : MonoBehaviour
         SubscribeToConfigChanges();
     }
 
-    void SubscribeToConfigChanges()
+    private void SubscribeToConfigChanges()
     {
         MyCoolBluuToon.PosterizeLevels.OnValueChanged += (_) => UpdateShaderValues();
         MyCoolBluuToon.PosterizeStrength.OnValueChanged += (_) => UpdateShaderValues();
@@ -148,7 +115,7 @@ public class notabigfanofthegovernment : MonoBehaviour
         MyCoolBluuToon.BlackB.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
     }
 
-    void LoadEmbeddedBundleAndShaders()
+    private void LoadEmbeddedBundleAndShaders()
     {
         var asm = Assembly.GetExecutingAssembly();
         string targetName = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("ImpactParry.doomahfunnyshaders.bundle"));
@@ -167,7 +134,7 @@ public class notabigfanofthegovernment : MonoBehaviour
         }
     }
 
-    void DiscoverCamera()
+    private void DiscoverCamera()
     {
         GameObject hudObj = GameObject.Find("Player/Main Camera/HUD Camera");
         if (hudObj != null) hudCamera = hudObj.GetComponent<Camera>();
@@ -191,21 +158,21 @@ public class notabigfanofthegovernment : MonoBehaviour
         SetUIVisible(true);
     }
 
-    void SetUIVisible(bool visible)
+    private void SetUIVisible(bool visible)
     {
-        var cheatsManager = MonoSingleton<CheatsManager>.Instance;
+        CheatsManager cheatsManager = MonoSingleton<CheatsManager>.Instance;
         if (cheatsManager == null) return;
 
-        var hideUI = cheatsManager.GetCheatInstance<HideUI>();
-        if (hideUI == null) return;
+        HideUI hideUICheat = cheatsManager.GetCheatInstance<HideUI>();
+        if (hideUICheat == null) return;
 
         if (visible)
-            hideUI.Disable();
+            hideUICheat.Disable();
         else
-            hideUI.Enable(cheatsManager);
+            hideUICheat.Enable(cheatsManager);
     }
 
-    void ApplyShaders()
+    private void ApplyShaders()
     {
         if (whiteShader != null) hudCamera?.SetReplacementShader(whiteShader, "RenderType");
         else if (blackShader != null) hudCamera?.SetReplacementShader(blackShader, "RenderType");
@@ -229,7 +196,7 @@ public class notabigfanofthegovernment : MonoBehaviour
         FixOutdoorEnemies.ApplyDefaultLayers();
     }
 
-    void UpdateShaderValues()
+    private void UpdateShaderValues()
     {
         Shader.SetGlobalFloat("_PosterizeLevels", MyCoolBluuToon.PosterizeLevels.Value);
         Shader.SetGlobalFloat("_PosterizeStrength", MyCoolBluuToon.PosterizeStrength.Value);
@@ -273,7 +240,7 @@ public class notabigfanofthegovernment : MonoBehaviour
         Shader.SetGlobalColor("_BlackTint", blackColor);
     }
 
-    void ResetReplacementShaderFromHUD()
+    private void ResetReplacementShaderFromHUD()
     {
         FixOutdoorEnemies.ApplyPreviousLayers();
         hudCamera?.ResetReplacementShader();
@@ -286,5 +253,5 @@ public class notabigfanofthegovernment : MonoBehaviour
         }
     }
 
-    void OnDestroy() => loadedBundle?.Unload(false);
+    private void OnDestroy() => loadedBundle?.Unload(false);
 }
