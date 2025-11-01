@@ -12,7 +12,7 @@ public static class Patches
     [HarmonyPatch(typeof(TimeController), "TimeIsStopped")]
     private static void ImpactPatch(float length)
     {
-        if (!MyCoolBluuToon.enabled.Value) return;
+        if (!Settings.enabled.Value) return;
         var mgr = ImpactManager.Instance;
         if (mgr == null) return;
 

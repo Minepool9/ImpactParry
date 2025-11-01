@@ -56,7 +56,7 @@ public class Plugin : BaseUnityPlugin
 
     private static void ResetSettings()
     {
-        Type UItype = typeof(MyCoolBluuToon);
+        Type UItype = typeof(Settings);
         BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         IEnumerable<ConfigValueElement> elements = UItype.GetFields(flags).Select(f => f.GetValue(null))
@@ -96,23 +96,23 @@ public class ImpactManager : MonoBehaviour
 
     private void SubscribeToConfigChanges()
     {
-        MyCoolBluuToon.PosterizeLevels.OnValueChanged += (_) => UpdateShaderValues();
-        MyCoolBluuToon.PosterizeStrength.OnValueChanged += (_) => UpdateShaderValues();
-        MyCoolBluuToon.ShadingBlend.OnValueChanged += (_) => UpdateShaderValues();
-        MyCoolBluuToon.Contrast.OnValueChanged += (_) => UpdateShaderValues();
-        MyCoolBluuToon.Brightness.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.PosterizeLevels.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.PosterizeStrength.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.ShadingBlend.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.Contrast.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.Brightness.OnValueChanged += (_) => UpdateShaderValues();
 
-        MyCoolBluuToon.WhiteTint.OnValueChanged += (_) => { if (!MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.BlackTint.OnValueChanged += (_) => { if (!MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.WhiteTint.OnValueChanged += (_) => { if (!Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BlackTint.OnValueChanged += (_) => { if (!Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
 
-        MyCoolBluuToon.UseIndividualInputs.OnValueChanged += (_) => UpdateShaderValues();
+        Settings.UseIndividualInputs.OnValueChanged += (_) => UpdateShaderValues();
 
-        MyCoolBluuToon.WhiteR.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.WhiteG.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.WhiteB.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.BlackR.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.BlackG.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
-        MyCoolBluuToon.BlackB.OnValueChanged += (_) => { if (MyCoolBluuToon.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.WhiteR.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.WhiteG.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.WhiteB.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BlackR.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BlackG.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BlackB.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
     }
 
     private void LoadEmbeddedBundleAndShaders()
@@ -198,41 +198,41 @@ public class ImpactManager : MonoBehaviour
 
     private void UpdateShaderValues()
     {
-        Shader.SetGlobalFloat("_PosterizeLevels", MyCoolBluuToon.PosterizeLevels.Value);
-        Shader.SetGlobalFloat("_PosterizeStrength", MyCoolBluuToon.PosterizeStrength.Value);
-        Shader.SetGlobalFloat("_ShadingBlend", MyCoolBluuToon.ShadingBlend.Value);
-        Shader.SetGlobalFloat("_Contrast", MyCoolBluuToon.Contrast.Value);
-        Shader.SetGlobalFloat("_Brightness", MyCoolBluuToon.Brightness.Value);
+        Shader.SetGlobalFloat("_PosterizeLevels", Settings.PosterizeLevels.Value);
+        Shader.SetGlobalFloat("_PosterizeStrength", Settings.PosterizeStrength.Value);
+        Shader.SetGlobalFloat("_ShadingBlend", Settings.ShadingBlend.Value);
+        Shader.SetGlobalFloat("_Contrast", Settings.Contrast.Value);
+        Shader.SetGlobalFloat("_Brightness", Settings.Brightness.Value);
 
         Color whiteColor;
         Color blackColor;
 
-        if (MyCoolBluuToon.UseIndividualInputs.Value)
+        if (Settings.UseIndividualInputs.Value)
         {
             whiteColor = new Color(
-                MyCoolBluuToon.WhiteR.Value / 255f,
-                MyCoolBluuToon.WhiteG.Value / 255f,
-                MyCoolBluuToon.WhiteB.Value / 255f
+                Settings.WhiteR.Value / 255f,
+                Settings.WhiteG.Value / 255f,
+                Settings.WhiteB.Value / 255f
             );
 
             blackColor = new Color(
-                MyCoolBluuToon.BlackR.Value / 255f,
-                MyCoolBluuToon.BlackG.Value / 255f,
-                MyCoolBluuToon.BlackB.Value / 255f
+                Settings.BlackR.Value / 255f,
+                Settings.BlackG.Value / 255f,
+                Settings.BlackB.Value / 255f
             );
         }
         else
         {
             whiteColor = new Color(
-                MyCoolBluuToon.WhiteTint.ValueArray[0] / 255f,
-                MyCoolBluuToon.WhiteTint.ValueArray[1] / 255f,
-                MyCoolBluuToon.WhiteTint.ValueArray[2] / 255f
+                Settings.WhiteTint.ValueArray[0] / 255f,
+                Settings.WhiteTint.ValueArray[1] / 255f,
+                Settings.WhiteTint.ValueArray[2] / 255f
             );
 
             blackColor = new Color(
-                MyCoolBluuToon.BlackTint.ValueArray[0] / 255f,
-                MyCoolBluuToon.BlackTint.ValueArray[1] / 255f,
-                MyCoolBluuToon.BlackTint.ValueArray[2] / 255f
+                Settings.BlackTint.ValueArray[0] / 255f,
+                Settings.BlackTint.ValueArray[1] / 255f,
+                Settings.BlackTint.ValueArray[2] / 255f
             );
         }
 
