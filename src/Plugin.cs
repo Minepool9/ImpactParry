@@ -76,6 +76,7 @@ public class ImpactManager : MonoBehaviour
 {
     public static ImpactManager Instance { get; private set; }
     public bool forceEffect = false;
+    public Shader blackShader;
     public Shader whiteShader;
     public AssetBundle loadedBundle;
     public Camera hudCamera;
@@ -127,6 +128,7 @@ public class ImpactManager : MonoBehaviour
             loadedBundle = AssetBundle.LoadFromMemory(data);
             if (loadedBundle != null)
             {
+                blackShader = loadedBundle.LoadAsset<Shader>("assets/custom/hiddenblackoutreplacement.shader");
                 whiteShader = loadedBundle.LoadAsset<Shader>("assets/custom/whiteshaded.shader");
             }
         }
@@ -173,6 +175,7 @@ public class ImpactManager : MonoBehaviour
     private void ApplyShaders()
     {
         if (whiteShader != null) hudCamera?.SetReplacementShader(whiteShader, "RenderType");
+        else if (blackShader != null) hudCamera?.SetReplacementShader(blackShader, "RenderType");
         if (mainCamera != null)
         {
             // set up previous
@@ -182,6 +185,7 @@ public class ImpactManager : MonoBehaviour
 
             // set shaders if not null
             if (whiteShader != null) mainCamera.SetReplacementShader(whiteShader, "RenderType");
+            else if (blackShader != null) mainCamera.SetReplacementShader(blackShader, "RenderType");
 
             // fancy extra stuff to hide the enviroment and like make the background black
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
