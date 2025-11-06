@@ -35,23 +35,30 @@ public class Plugin : BaseUnityPlugin
 
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (ImpactManager.Instance != null) 
+        if (ImpactManager.Instance != null)
             ImpactManager.Instance.forceEffect = false;
 
         var sceneName = SceneHelper.CurrentScene;
         if (!string.IsNullOrEmpty(sceneName) && sceneName != "Bootstrap" && sceneName != "Main Menu" && sceneName != "Intro")
         {
-            if (ImpactManager.Instance == null) TryCreateManager();
+            if (ImpactManager.Instance == null)
+                TryCreateManager();
+            else
+                ImpactManager.Instance.StartCoroutine(ImpactManager.Instance.DelayedCameraDiscovery());
         }
     }
 
     private static void TryCreateManager()
     {
-        if (ImpactManager.Instance != null) return;
+        if (ImpactManager.Instance != null && ImpactManager.Instance != null && ImpactManager.Instance.gameObject != null)
+            return;
+
+        if (ImpactManager.Instance != null && ImpactManager.Instance.gameObject == null)
+            ImpactManager.Instance = null;
 
         GameObject mgrObj = new("ImpactManager");
         mgrObj.AddComponent<ImpactManager>();
-        DontDestroyOnLoad(mgrObj);
+        UnityEngine.Object.DontDestroyOnLoad(mgrObj);
     }
 
     private static void ResetSettings()
@@ -74,7 +81,7 @@ public class Plugin : BaseUnityPlugin
 
 public class ImpactManager : MonoBehaviour
 {
-    public static ImpactManager Instance { get; private set; }
+    public static ImpactManager Instance { get; internal set; }
     public bool forceEffect = false;
     public Shader blackShader;
     public Shader whiteShader;
@@ -160,6 +167,12 @@ public class ImpactManager : MonoBehaviour
         activeCount = 0;
         ResetReplacementShaderFromHUD();
         SetUIVisible(true);
+    }
+
+    public System.Collections.IEnumerator DelayedCameraDiscovery()
+    {
+        yield return new WaitForSeconds(0.5f);
+        DiscoverCamera();
     }
 
     private void SetUIVisible(bool visible)
@@ -276,5 +289,9 @@ public class ImpactManager : MonoBehaviour
         }
     }
 
-    private void OnDestroy() => loadedBundle?.Unload(false);
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+        loadedBundle?.Unload(false);
+    }
 }
