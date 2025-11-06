@@ -19,7 +19,7 @@ public class Plugin : BaseUnityPlugin
     private ConfigBuilder config;
     private Harmony harmony;
 
-    [Configgable(path: "Shader", displayName: "Reset Values To Defaults")]
+    [Configgable(path: "Shader", displayName: "Reset Values To Defaults", orderInList:10)]
     public static ConfigButton ResetMySettingsButton = new(ResetSettings);
 
     private void Awake()
@@ -104,6 +104,7 @@ public class ImpactManager : MonoBehaviour
 
         Settings.WhiteTint.OnValueChanged += (_) => { if (!Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
         Settings.BlackTint.OnValueChanged += (_) => { if (!Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BColor.OnValueChanged += (_) => { if (!Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
 
         Settings.UseIndividualInputs.OnValueChanged += (_) => UpdateShaderValues();
 
@@ -113,6 +114,9 @@ public class ImpactManager : MonoBehaviour
         Settings.BlackR.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
         Settings.BlackG.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
         Settings.BlackB.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BGR.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BGG.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
+        Settings.BGB.OnValueChanged += (_) => { if (Settings.UseIndividualInputs.Value) UpdateShaderValues(); };
     }
 
     private void LoadEmbeddedBundleAndShaders()
@@ -198,6 +202,10 @@ public class ImpactManager : MonoBehaviour
 
     private void UpdateShaderValues()
     {
+
+        if (blackShader == null && whiteShader == null)
+            return;
+
         Shader.SetGlobalFloat("_PosterizeLevels", Settings.PosterizeLevels.Value);
         Shader.SetGlobalFloat("_PosterizeStrength", Settings.PosterizeStrength.Value);
         Shader.SetGlobalFloat("_ShadingBlend", Settings.ShadingBlend.Value);
@@ -206,6 +214,7 @@ public class ImpactManager : MonoBehaviour
 
         Color whiteColor;
         Color blackColor;
+        Color bgColor;
 
         if (Settings.UseIndividualInputs.Value)
         {
@@ -219,6 +228,12 @@ public class ImpactManager : MonoBehaviour
                 Settings.BlackR.Value / 255f,
                 Settings.BlackG.Value / 255f,
                 Settings.BlackB.Value / 255f
+            );
+
+            bgColor = new Color(
+                Settings.BGR.Value / 255f,
+                Settings.BGG.Value / 255f,
+                Settings.BGB.Value / 255f
             );
         }
         else
@@ -234,10 +249,18 @@ public class ImpactManager : MonoBehaviour
                 Settings.BlackTint.ValueArray[1] / 255f,
                 Settings.BlackTint.ValueArray[2] / 255f
             );
+
+            bgColor = new Color(
+                Settings.BColor.ValueArray[0] / 255f,
+                Settings.BColor.ValueArray[1] / 255f,
+                Settings.BColor.ValueArray[2] / 255f
+            );
         }
 
         Shader.SetGlobalColor("_WhiteTint", whiteColor);
         Shader.SetGlobalColor("_BlackTint", blackColor);
+        if (mainCamera != null)
+            mainCamera.backgroundColor = bgColor;
     }
 
     private void ResetReplacementShaderFromHUD()

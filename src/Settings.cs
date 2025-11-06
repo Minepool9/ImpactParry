@@ -23,12 +23,14 @@ public class Settings
     public static FloatSlider Brightness = new(2.25f, 0.1f, 10f, 0.1f);
 
     [Configgable("Shader", "White Tint")]
-    public static RGBSliderConfig WhiteTint = new([ 255, 255, 255 ]);
+    public static RGBSliderConfig WhiteTint = new([255, 255, 255]);
 
     [Configgable("Shader", "Black Tint")]
-    public static RGBSliderConfig BlackTint = new([ 0, 0, 0 ]);
+    public static RGBSliderConfig BlackTint = new([0, 0, 0]);
 
-    // New toggle to switch between slider vs input field mode
+    [Configgable("Shader", "Background color")]
+    public static RGBSliderConfig BColor = new([0, 0, 0]);
+
     [Configgable("Shader", "Use Individual Inputs")]
     public static ConfigToggle UseIndividualInputs = new(false);
 
@@ -40,4 +42,8 @@ public class Settings
     [Configgable("Shader/Individual/Black", "Black R")] public static ConfigInputField<int> BlackR = new(0);
     [Configgable("Shader/Individual/Black", "Black G")] public static ConfigInputField<int> BlackG = new(0);
     [Configgable("Shader/Individual/Black", "Black B")] public static ConfigInputField<int> BlackB = new(0);
+
+    [Configgable("Shader/Individual/Background", "BG R")] public static ConfigInputField<int> BGR = new(0);
+    [Configgable("Shader/Individual/Background", "BG G")] public static ConfigInputField<int> BGG = new(0);
+    [Configgable("Shader/Individual/Background", "BG B")] public static ConfigInputField<int> BGB = new(0);
 }
