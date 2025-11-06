@@ -239,21 +239,21 @@ public class ImpactManager : MonoBehaviour
         else
         {
             whiteColor = new Color(
-                Settings.WhiteTint.ValueArray[0] / 255f,
-                Settings.WhiteTint.ValueArray[1] / 255f,
-                Settings.WhiteTint.ValueArray[2] / 255f
+                Settings.WhiteTint.Value[0] / 255f,
+                Settings.WhiteTint.Value[1] / 255f,
+                Settings.WhiteTint.Value[2] / 255f
             );
 
             blackColor = new Color(
-                Settings.BlackTint.ValueArray[0] / 255f,
-                Settings.BlackTint.ValueArray[1] / 255f,
-                Settings.BlackTint.ValueArray[2] / 255f
+                Settings.BlackTint.Value[0] / 255f,
+                Settings.BlackTint.Value[1] / 255f,
+                Settings.BlackTint.Value[2] / 255f
             );
 
             bgColor = new Color(
-                Settings.BColor.ValueArray[0] / 255f,
-                Settings.BColor.ValueArray[1] / 255f,
-                Settings.BColor.ValueArray[2] / 255f
+                Settings.BColor.Value[0] / 255f,
+                Settings.BColor.Value[1] / 255f,
+                Settings.BColor.Value[2] / 255f
             );
         }
 

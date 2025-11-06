@@ -5,51 +5,55 @@ using UnityEngine.UI;
 
 public class RGBSliderConfig : ConfigValueElement<int[]>
 {
-    public int[] ValueArray = new int[3];
     private Slider[] sliders = new Slider[3];
     private Image colorPreview;
 
     public RGBSliderConfig(int[] defaultValue) : base(defaultValue)
     {
-        for (int i = 0; i < 3; i++)
-            ValueArray[i] = defaultValue[i];
+        value = (int[])defaultValue.Clone();
     }
 
     protected override void BuildElementCore(RectTransform rect)
     {
-        DynUI.ConfigUI.CreateElementSlot(rect, this, (elementsDiv) =>
+        LoadValue();
+
+        DynUI.ConfigUI.CreateElementSlot(rect, this, elementsDiv =>
         {
             Color[] channelColors = { Color.red, Color.green, Color.blue };
 
             for (int i = 0; i < 3; i++)
             {
                 int index = i;
-                DynUI.Div(elementsDiv, (sliderDiv) =>
+                DynUI.Div(elementsDiv, sliderDiv =>
                 {
-                    DynUI.Slider(sliderDiv, (slider) =>
+                    DynUI.Slider(sliderDiv, slider =>
                     {
                         slider.minValue = 0;
                         slider.maxValue = 255;
                         slider.wholeNumbers = true;
-                        slider.value = ValueArray[index];
+
+                        if (value == null || value.Length < 3)
+                            value = new int[3] { 255, 255, 255 };
+
+                        slider.value = value[index];
                         sliders[index] = slider;
 
                         var fill = slider.fillRect?.GetComponent<Image>();
                         if (fill != null)
-                            fill.color = channelColors[index] * (ValueArray[index] / 255f + 0.2f);
+                            fill.color = channelColors[index] * (value[index] / 255f + 0.2f);
 
-                        slider.onValueChanged.AddListener((v) =>
+                        slider.onValueChanged.AddListener(v =>
                         {
-                            ValueArray[index] = (int)v;
+                            value[index] = (int)v;
+                            SetValue((int[])value.Clone());
                             UpdateSliderColors();
                             UpdateColorPreview();
-                            SetValue(GetValue()); // Mark as dirty for saving
                         });
                     });
                 });
             }
 
-            DynUI.Div(elementsDiv, (previewDiv) =>
+            DynUI.Div(elementsDiv, previewDiv =>
             {
                 RectTransform rt = previewDiv;
                 rt.sizeDelta = new Vector2(40, 40);
@@ -57,58 +61,61 @@ public class RGBSliderConfig : ConfigValueElement<int[]>
                 UpdateColorPreview();
             });
         });
+
+        RefreshElementValue();
     }
 
     private void UpdateSliderColors()
     {
+        if (sliders == null) return;
+
         Color[] channelColors = { Color.red, Color.green, Color.blue };
         for (int i = 0; i < 3; i++)
         {
+            if (sliders[i] == null) continue;
             var fill = sliders[i].fillRect?.GetComponent<Image>();
             if (fill != null)
-                fill.color = channelColors[i] * (ValueArray[i] / 255f + 0.2f);
+                fill.color = channelColors[i] * (value[i] / 255f + 0.2f);
         }
     }
 
     private void UpdateColorPreview()
     {
-        if (colorPreview != null)
-        {
-            colorPreview.color = new Color(
-                ValueArray[0] / 255f,
-                ValueArray[1] / 255f,
-                ValueArray[2] / 255f
-            );
-        }
+        if (colorPreview == null || value == null) return;
+
+        colorPreview.color = new Color(
+            value[0] / 255f,
+            value[1] / 255f,
+            value[2] / 255f
+        );
     }
 
     protected override void RefreshElementValueCore()
     {
+        if (value == null)
+            LoadValue();
+
         for (int i = 0; i < 3; i++)
         {
             if (sliders[i] != null)
-                sliders[i].value = ValueArray[i];
+                sliders[i].SetValueWithoutNotify(value[i]);
         }
+
         UpdateSliderColors();
         UpdateColorPreview();
     }
 
     protected override void ResetValueCore()
     {
-        for (int i = 0; i < 3; i++)
-            ValueArray[i] = DefaultValue[i];
-
+        value = (int[])DefaultValue.Clone();
+        SetValue((int[])value.Clone());
         RefreshElementValue();
-        SetValue(GetValue());
-    }
-
-    public void ResetRGBManually()
-    {
-        ResetValueCore();
     }
 
     protected override int[] GetValueCore()
     {
-        return new int[] { ValueArray[0], ValueArray[1], ValueArray[2] };
+        if (value == null)
+            value = (int[])DefaultValue.Clone();
+        return (int[])value.Clone();
     }
 }

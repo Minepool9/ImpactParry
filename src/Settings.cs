@@ -31,7 +31,7 @@ public class Settings
     [Configgable("Shader", "Background color")]
     public static RGBSliderConfig BColor = new([0, 0, 0]);
 
-    [Configgable("Shader", "Use Individual Inputs")]
+    [Configgable("Shader", "Use numbers instead of sliders (go to the Individual tab ontop)")]
     public static ConfigToggle UseIndividualInputs = new(false);
 
     // Individual input fields for white and black tints
