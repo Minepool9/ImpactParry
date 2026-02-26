@@ -3,6 +3,7 @@
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 /// <summary> Really stupidly fixes the issue with certain enemies being hidden, fixes by changing their obj's layer. </summary>
 [HarmonyPatch]
@@ -43,8 +44,7 @@ public static class FixOutdoorEnemies
     [HarmonyPatch(typeof(Guttertank), "Start")]
     public static void GuttertankFix(Guttertank __instance)
     {
-        GameObject gameobject = new ChildGetter<Guttertank>(__instance).Get("Guttertank/Guttertank");
-        log.Info($"GuttertankFix:: gameobject.name: {gameobject.name} gameobject.layer: {gameobject.layer}");
+        GameObject gameobject = new ChildGetter<Guttertank>(__instance).Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Guttertank/Guttertank");
         AddForcers(gameobject);
     }
 
@@ -56,7 +56,7 @@ public static class FixOutdoorEnemies
     {
         ChildGetter<Gutterman> getter = new(__instance);
         List<GameObject> gameObjects = 
-            [getter.Get("Gutterman"), getter.Get("Gutterman/Gutterman"), getter.Get("Gutterman/Shield")];
+            [getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Gutterman"), getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Gutterman/Casket_Door"), getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Gutterman/Gutterman"), getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Gutterman/Shield")];
         
         AddForcers(gameObjects);
     }
@@ -67,30 +67,35 @@ public static class FixOutdoorEnemies
     [HarmonyPatch(typeof(MortarLauncher), "Start")]
     public static void MortarLauncherFix(MortarLauncher __instance)
     {
-        bool isTower = __instance.transform.Find("Tower") != null;
-        GameObject gameobject = new ChildGetter<MortarLauncher>(__instance).Get(isTower ? "Tower" : "MortarLauncher");
+        GameObject gameobject = new ChildGetter<MortarLauncher>(__instance).Get("Mortar");
         AddForcers(gameobject);
     }
 
     /// <summary> Fixes the visibility of the Maurice in an Impact Frame. </summary>
     /// <param name="__instance">Instance of the Maurice.</param>
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(SpiderBody), "Start")]
-    public static void MauriceFix(SpiderBody __instance)
+    [HarmonyPatch(typeof(MaliciousFace), "Start")]
+    public static void MauriceFix(MaliciousFace __instance)
     {
-        GameObject gameobject = new ChildGetter<SpiderBody>(__instance).Get("MaliciousFace/MaliciousFace");
+        GameObject gameobject = new ChildGetter<MaliciousFace>(__instance).Get("MaliciousFace/MaliciousFace");
         AddForcers(gameobject);
     }
 
     /// <summary> Fixes the visibility of the Cerberi in an Impact Frame. </summary>
-    /// <param name="__instance">Instance of the Cerberi.</param>
+    /// <param name="__instance">Instance of the Enemy.</param>
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(Statue), "Start")]
-    public static void CerberiFix(Statue __instance)
+    [HarmonyPatch(typeof(Enemy), "Start")]
+    public static void CerberiFix(Enemy __instance)
     {
-        ChildGetter<Statue> getter = new(__instance);
+        if (!__instance.IsStatue()) return;
+
+        ChildGetter<Enemy> getter = new(__instance);
+
         List<GameObject> gameObjects =
-            [getter.Get("Cerberus/Cerberus"), getter.Get("Cerberus/Cerb_Apple")];
+        [
+            getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Cerberus/Cerberus"),
+            getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Cerberus/Cerb_Apple")
+        ];
 
         AddForcers(gameObjects);
     }
@@ -132,6 +137,90 @@ public static class FixOutdoorEnemies
         List<GameObject> gameObjects = __instance.eid.FullName == "FLESH PANOPTICON"
             ? [getter.Get("FleshPrison2"), getter.Get("FleshPrison2/FleshPrison2_Base"), getter.Get("FleshPrison2/FleshPrison2_Head")]
             : [getter.Get("fleshprisonrigged/FleshPrison")];
+
+        AddForcers(gameObjects);
+    }
+
+    /// <summary> Fixes the visibility of the VirtueInsignia in an Impact Frame. </summary>
+    /// <param name="__instance">Instance of the VirtueInsignia.</param>
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(VirtueInsignia), "Start")]
+    public static void VirtueInsigniaFix(VirtueInsignia __instance)
+    {
+        ChildGetter<VirtueInsignia> getter = new(__instance);
+        List<GameObject> gameObjects =
+        [
+            getter.Get("DivineOrthos/Wings"),
+            getter.Get("DivineOrthos/Orthos_Root/Sphere")
+        ];
+
+        AddForcers(gameObjects);
+    }
+
+    /// <summary> Fixes the visibility of the Drone in an Impact Frame. </summary>
+    /// <param name="__instance">Instance of the Drone.</param>
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Drone), "Start")]
+    public static void DroneFix(Drone __instance)
+    {
+        ChildGetter<Drone> getter = new(__instance);
+        List<GameObject> gameObjects =
+        [
+            getter.Get("Providence/Primary Wings"),
+        getter.Get("Providence/SecondaryWings"),
+        getter.Get("Providence/Eye")
+        ];
+
+        AddForcers(gameObjects);
+    }
+
+    /// <summary> Fixes the visibility of the Deathcatcher in an Impact Frame. </summary>
+    /// <param name="__instance">Instance of the Deathcatcher.</param>
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Deathcatcher), "Start")]
+    public static void DeathcatcherFix(Deathcatcher __instance)
+    {
+        ChildGetter<Deathcatcher> getter = new(__instance);
+        List<GameObject> gameObjects =
+        [
+            getter.Get("Model/Deathcatcher_Animated"),
+            getter.Get("Model"),
+            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Open"),
+            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Closed"),
+            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Animated")
+        ];
+
+        AddForcers(gameObjects);
+    }
+
+    /// <summary> Fixes the visibility of the Ferryman in an Impact Frame. </summary>
+    /// <param name="__instance">Instance of the Ferryman.</param>
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Ferryman), "Start")]
+    public static void FerrymanFix(Ferryman __instance)
+    {
+        ChildGetter<Ferryman> getter = new(__instance);
+        List<GameObject> gameObjects =
+        [
+            getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Ferryman"),
+        getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2"),
+        getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Oar")
+        ];
+
+        AddForcers(gameObjects);
+    }
+
+    /// <summary> Fixes the visibility of the MirrorReaper in an Impact Frame. </summary>
+    /// <param name="__instance">Instance of the MirrorReaper.</param>
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(MirrorReaper), "Start")]
+    public static void MirrorReaperFix(MirrorReaper __instance)
+    {
+        ChildGetter<MirrorReaper> getter = new(__instance);
+        List<GameObject> gameObjects =
+        [
+            getter.Get("Mirror Reaper_Visual/Mirror Reaper")
+        ];
 
         AddForcers(gameObjects);
     }

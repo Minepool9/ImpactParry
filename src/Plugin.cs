@@ -195,16 +195,13 @@ public class ImpactManager : MonoBehaviour
         else if (blackShader != null) hudCamera?.SetReplacementShader(blackShader, "RenderType");
         if (mainCamera != null)
         {
-            // set up previous
             mainPrevClear = mainCamera.clearFlags;
             mainPrevBg = mainCamera.backgroundColor;
             mainPrevMask = mainCamera.cullingMask;
 
-            // set shaders if not null
             if (whiteShader != null) mainCamera.SetReplacementShader(whiteShader, "RenderType");
             else if (blackShader != null) mainCamera.SetReplacementShader(blackShader, "RenderType");
 
-            // fancy extra stuff to hide the enviroment and like make the background black
             mainCamera.clearFlags = CameraClearFlags.SolidColor;
             mainCamera.backgroundColor = Color.black;
             mainCamera.cullingMask ^= LayerMaskDefaults.Get(LMD.Environment) | LayerMask.GetMask("Outdoors Non-solid");
