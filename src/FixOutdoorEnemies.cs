@@ -1,4 +1,4 @@
-﻿namespace ImpactParry;
+namespace ImpactParry;
 
 using HarmonyLib;
 using System.Collections.Generic;
@@ -141,73 +141,45 @@ public static class FixOutdoorEnemies
         AddForcers(gameObjects);
     }
 
-    /// <summary> Fixes the visibility of the VirtueInsignia in an Impact Frame. </summary>
-    /// <param name="__instance">Instance of the VirtueInsignia.</param>
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(VirtueInsignia), "Start")]
-    public static void VirtueInsigniaFix(VirtueInsignia __instance)
-    {
-        ChildGetter<VirtueInsignia> getter = new(__instance);
-        List<GameObject> gameObjects =
-        [
-            getter.Get("DivineOrthos/Wings"),
-            getter.Get("DivineOrthos/Orthos_Root/Sphere")
-        ];
-
-        AddForcers(gameObjects);
-    }
-
-    /// <summary> Fixes the visibility of the Drone in an Impact Frame. </summary>
-    /// <param name="__instance">Instance of the Drone.</param>
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(Drone), "Start")]
-    public static void DroneFix(Drone __instance)
-    {
-        ChildGetter<Drone> getter = new(__instance);
-        List<GameObject> gameObjects =
-        [
-            getter.Get("Providence/Primary Wings"),
-        getter.Get("Providence/SecondaryWings"),
-        getter.Get("Providence/Eye")
-        ];
-
-        AddForcers(gameObjects);
-    }
-
-    /// <summary> Fixes the visibility of the Deathcatcher in an Impact Frame. </summary>
-    /// <param name="__instance">Instance of the Deathcatcher.</param>
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(Deathcatcher), "Start")]
-    public static void DeathcatcherFix(Deathcatcher __instance)
-    {
-        ChildGetter<Deathcatcher> getter = new(__instance);
-        List<GameObject> gameObjects =
-        [
-            getter.Get("Model/Deathcatcher_Animated"),
-            getter.Get("Model"),
-            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Open"),
-            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Closed"),
-            getter.Get("Model/Deathcatcher_Animated/Deathcatcher_Animated")
-        ];
-
-        AddForcers(gameObjects);
-    }
-
-    /// <summary> Fixes the visibility of the Ferryman in an Impact Frame. </summary>
-    /// <param name="__instance">Instance of the Ferryman.</param>
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Ferryman), "Start")]
-    public static void FerrymanFix(Ferryman __instance)
+    public static void FerrymanMaterialCheck(Ferryman __instance)
     {
         ChildGetter<Ferryman> getter = new(__instance);
-        List<GameObject> gameObjects =
-        [
-            getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Ferryman"),
-        getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2"),
-        getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Oar")
-        ];
 
-        AddForcers(gameObjects);
+        GameObject ferrymanObj = getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Ferryman");
+        GameObject oarObj = getter.Get("RotationTransform (PortalOffset)/BodyCenterRotation (PortalOffset)/Ferryman2/Oar");
+
+        if (ferrymanObj == null || oarObj == null) return;
+
+        SkinnedMeshRenderer ferrymanSMR = ferrymanObj.GetComponentInChildren<SkinnedMeshRenderer>();
+        SkinnedMeshRenderer oarSMR = oarObj.GetComponentInChildren<SkinnedMeshRenderer>();
+
+        if (ferrymanSMR == null || oarSMR == null) return;
+
+        Material[] ferrymanMats = ferrymanSMR.materials;
+        Material[] oarMats = oarSMR.sharedMaterials;
+
+        if (ferrymanMats.Length == 0 || oarMats.Length == 0) return;
+
+        for (int i = 0; i < ferrymanMats.Length; i++)
+        {
+            Material inst = ferrymanMats[i];
+            Material src = oarMats.Length > i ? oarMats[i] : oarMats[0];
+
+            if (inst == null || src == null) continue;
+            if (inst.shader != src.shader) continue;
+
+            inst.shader = src.shader;
+
+            if (inst.HasProperty("_Opacity")) inst.SetFloat("_Opacity", src.HasProperty("_Opacity") ? src.GetFloat("_Opacity") : 1f);
+            if (inst.HasProperty("_BlendMode")) inst.SetFloat("_BlendMode", src.HasProperty("_BlendMode") ? src.GetFloat("_BlendMode") : 0f);
+            if (inst.HasProperty("_CullMode")) inst.SetFloat("_CullMode", src.HasProperty("_CullMode") ? src.GetFloat("_CullMode") : 2f);
+
+            inst.renderQueue = src.renderQueue;
+        }
+
+        ferrymanSMR.materials = ferrymanMats;
     }
 
     /// <summary> Fixes the visibility of the MirrorReaper in an Impact Frame. </summary>
@@ -228,7 +200,7 @@ public static class FixOutdoorEnemies
     /// <summary> Gets one of the child GameObjects in an enemy. (even more ass) </summary>
     /// <typeparam name="T">The enemy component type to get children from.</typeparam>
     /// <param name="instance">The enemy component to get children from.</param>
-    private class ChildGetter<T>(T instance) where T : Component
+    public class ChildGetter<T>(T instance) where T : Component
     {
         /// <summary> The enemy component to get children from. </summary>
         private readonly T instance = instance;
@@ -238,15 +210,41 @@ public static class FixOutdoorEnemies
         /// <returns>The child.</returns>
         public GameObject Get(string path)
         {
+            if (instance == null)
+            {
+                Debug.LogError($"Instance was null while trying to resolve path: {path}");
+                return null;
+            }
+
             string[] childrenPaths = path.Split('/');
-            Transform Child = null;
+            Transform current = instance.transform;
 
             foreach (string childPath in childrenPaths)
             {
-                Child = Child == null ? instance.transform.Find(childPath) : Child = Child.Find(childPath);
+                if (current == null)
+                {
+                    Debug.LogError($"Null transform while resolving '{path}' on {instance.GetType().Name}");
+                    return null;
+                }
+
+                Transform next = current.Find(childPath);
+
+                if (next == null)
+                {
+                    Debug.LogError($"Could not find child '{childPath}' in path '{path}' on {instance.GetType().Name}");
+                    return null;
+                }
+
+                current = next;
             }
 
-            return Child?.gameObject;
+            if (current == null)
+            {
+                Debug.LogError($"Final transform null for path '{path}' on {instance.GetType().Name}");
+                return null;
+            }
+
+            return current.gameObject;
         }
     }
     #endregion
@@ -286,3 +284,4 @@ public class ForceDefaultOnActive : MonoBehaviour
         if (Active && gameObject != null && gameObject?.layer != 0) SetDefault();
     }
 }
+
