@@ -2,7 +2,7 @@ Shader "Hidden/WhiteShadedPosterizeV5_Camera"
 {
     Properties
     {
-        _MainTex ("Base (RGB)", 2D) = "white" {}
+        _MainTex ("Base (RGBA)", 2D) = "white" {}
         _PosterizeLevels ("Posterize Levels", Range(2,16)) = 5.6
         _PosterizeStrength ("Posterize Strength", Range(0,1)) = 1
         _ShadingBlend ("Shading Blend", Range(0,1)) = 0
@@ -10,11 +10,12 @@ Shader "Hidden/WhiteShadedPosterizeV5_Camera"
         _Brightness ("Brightness", Range(0,10)) = 2.25
         _WhiteTint ("White Tint", Color) = (1,1,1,1)
         _BlackTint ("Black Tint", Color) = (0,0,0,1)
+        _AlphaCutoff ("Alpha Cutoff", Range(0,1)) = 0.01
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="Geometry" }
+        Tags { "RenderType"="Opaque" }
         Cull Back
         ZWrite On
         LOD 100
@@ -37,13 +38,19 @@ Shader "Hidden/WhiteShadedPosterizeV5_Camera"
             float _Brightness;
             float4 _WhiteTint;
             float4 _BlackTint;
+            float _AlphaCutoff;
 
             inline float3 LumaWeights() { return float3(0.2126, 0.7152, 0.0722); }
 
             fixed4 frag(v2f_img i) : SV_Target
             {
                 float2 uv = i.uv * _MainTex_ST.xy + _MainTex_ST.zw;
-                float3 tex = tex2D(_MainTex, uv).rgb;
+                float4 sample = tex2D(_MainTex, uv);
+                float3 tex = sample.rgb;
+                float alpha = sample.a;
+
+                clip(alpha - _AlphaCutoff);
+
                 float lum = dot(tex, LumaWeights());
                 lum = (lum - 0.5) * _Contrast + 0.5;
                 lum = saturate(lum * _Brightness);
@@ -58,11 +65,10 @@ Shader "Hidden/WhiteShadedPosterizeV5_Camera"
                 float posterized = lerp(lum, preserved, _PosterizeStrength);
 
                 float3 gray = lerp(_BlackTint.rgb, _WhiteTint.rgb, posterized);
-                return float4(gray, 1.0);
+                return float4(gray, alpha);
             }
             ENDCG
         }
     }
-
     Fallback Off
 }
